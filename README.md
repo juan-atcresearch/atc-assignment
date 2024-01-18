@@ -95,7 +95,7 @@ Create a new markdown file at the root of the repository called bug-fix.md.
 Please share in this file the steps you followed to debug this issue. What tools did you use?
 
 
-### Task 3: Feature: Implement a read status for messages
+### Task 2: Feature: Implement a read status for messages
 
 We want to keep track of whether the recipient has read each message, and update the front-end UI accordingly. 
 This includes showing the number of unread messages in a conversation. 
