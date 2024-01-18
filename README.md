@@ -6,10 +6,6 @@ A one-to-one realtime chat app.
 
 ## Local Setup
 
-**Note:** these setup steps are not necessary when running the code on GitPod. They are only necessary when running the project on your local machine.
-
-Create the PostgreSQL database (these instructions may need to be adapted for your operating system):
-
 ```
 psql
 CREATE DATABASE messenger;
