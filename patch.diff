@@ -1,0 +1,116 @@
+From 8ad946ee56acd29e9e3679967b6a891133f6e1ac Mon Sep 17 00:00:00 2001
+From: Delmarc Eric Rosario <>
+Date: Thu, 25 Jan 2024 23:08:44 -0800
+Subject: [PATCH] Regards to the code interview... Changes contain items to
+ setup the db, reorg/reversing of array order to have it be in the order
+ expected... waiting for the promise to resolve
+
+---
+ bug-fix.md                                   |  4 ++++
+ client/src/components/ActiveChat/Messages.js |  2 +-
+ client/src/components/Home.js                | 17 +++++++++++------
+ server/db/db.js                              | 14 ++++++++++++--
+ 4 files changed, 28 insertions(+), 9 deletions(-)
+ create mode 100644 bug-fix.md
+
+diff --git a/bug-fix.md b/bug-fix.md
+new file mode 100644
+index 0000000..61318f1
+--- /dev/null
++++ b/bug-fix.md
+@@ -0,0 +1,4 @@
++So first I had added a number of console logs and stepped though the code in order to see where there were some issues
++
++1. there was a function in home named "saveMessage" that i had to change due to that fact that it was just returning a promise so I had it resolve so the next function "addMessageToConversation" would be able to parse thourgh the object it was expecting..
++2. I would manipulate the array order when it was displaying due to being reversed from what it should be... additionally when adding I would use unshift to add to the end (one thing I would think about though is that I should push as it was before then reverse the order... that might have been cleaner...)
+diff --git a/client/src/components/ActiveChat/Messages.js b/client/src/components/ActiveChat/Messages.js
+index c8a6c8c..2d77c45 100644
+--- a/client/src/components/ActiveChat/Messages.js
++++ b/client/src/components/ActiveChat/Messages.js
+@@ -8,7 +8,7 @@ const Messages = (props) => {
+ 
+   return (
+     <Box>
+-      {messages.map((message) => {
++      {messages.reverse().map((message) => {
+         const time = moment(message.createdAt).format("h:mm");
+ 
+         return message.senderId === userId ? (
+diff --git a/client/src/components/Home.js b/client/src/components/Home.js
+index d301ab2..15eed1e 100644
+--- a/client/src/components/Home.js
++++ b/client/src/components/Home.js
+@@ -50,7 +50,10 @@ const Home = ({ user, logout }) => {
+   };
+ 
+   const saveMessage = async (body) => {
+-    const { data } = await axios.post("/api/messages", body);
++    const { data } = await axios.post("/api/messages", body).then((payload) => {
++      console.log("from post", payload);
++      return payload;
++    });
+     return data;
+   };
+ 
+@@ -62,12 +65,14 @@ const Home = ({ user, logout }) => {
+     });
+   };
+ 
+-  const postMessage = (body) => {
++  const postMessage = async (body) => {
+     try {
+-      const data = saveMessage(body);
++      const data = await saveMessage(body);
++
++      console.log("post message", body, data);
+ 
+       if (!body.conversationId) {
+-        addNewConvo(body.recipientId, data.message);
++        addNewConvo(body.recipientId, body.text);
+       } else {
+         addMessageToConversation(data);
+       }
+@@ -108,11 +113,11 @@ const Home = ({ user, logout }) => {
+ 
+       conversations.forEach((convo) => {
+         if (convo.id === message.conversationId) {
+-          convo.messages.push(message);
++          convo.messages.reverse().unshift(message);
+           convo.latestMessageText = message.text;
+         }
+       });
+-      setConversations(conversations);
++      setConversations(conversations.slice());
+     },
+     [setConversations, conversations]
+   );
+diff --git a/server/db/db.js b/server/db/db.js
+index 65a9da8..ba45fbb 100644
+--- a/server/db/db.js
++++ b/server/db/db.js
+@@ -1,10 +1,20 @@
+ const Sequelize = require("sequelize");
+ 
+ const db = new Sequelize(
+-  process.env.DATABASE_URL || "postgres://localhost:5432/messenger",
++  'db_name', 'postgres', 'password',
+   {
+-    logging: false,
++    host: "localhost",
++    dialect: "postgres"
+   }
+ );
+ 
++/*\
++
++  {
++    host: process.env.DATABASE_URL || "postgres://localhost:5432/messenger",
++    logging: false,
++  }
++
++*/
++
+ module.exports = db;
+-- 
+2.41.0
+
